@@ -114,7 +114,7 @@ If fewer than 2 competitors can be identified with reasonable confidence, note t
 Return ONLY valid JSON array, no markdown fences.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
     config: {
       tools: [{ googleSearch: {} }],
@@ -165,7 +165,7 @@ Prioritize the user's direct knowledge from the brainstorm over generic research
 Return ONLY valid JSON with keys "segments" and "antiPersonas", no markdown fences.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
   });
 
@@ -206,7 +206,7 @@ If confidence would be below low, return null with a note that market sizing req
 Return ONLY valid JSON, no markdown fences.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
     config: {
       tools: [{ googleSearch: {} }],
@@ -255,7 +255,7 @@ Write as directive guidance for an AI coding agent (Kiro), not as options for th
 Return ONLY valid JSON array with objects containing "concern", "recommendation", and "rationale" fields, no markdown fences.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
   });
 
@@ -296,7 +296,7 @@ Provide a research-backed finding that addresses this gap. Include your confiden
 Return ONLY valid JSON with keys "finding" and "confidence", no markdown fences.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],

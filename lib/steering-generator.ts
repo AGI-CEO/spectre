@@ -58,7 +58,7 @@ ${unresolvedNote}
 Output ONLY the markdown content. Do NOT include YAML front-matter — it will be prepended automatically.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
   });
 
@@ -94,7 +94,7 @@ Write so Kiro can use this to make product decisions — e.g. when generating UI
 Output ONLY the markdown content. Do NOT include YAML front-matter — it will be prepended automatically.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
   });
 
@@ -136,7 +136,7 @@ ${conversationContext}
 Output ONLY markdown content.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
   });
 

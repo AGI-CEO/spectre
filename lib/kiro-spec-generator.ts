@@ -73,7 +73,7 @@ export async function generateKiroSpec(params: {
 
   // Requirements must be generated first so tasks can reference them
   const requirementsResponse = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.1-flash-lite-preview",
     contents: requirementsPrompt,
   });
 
@@ -90,11 +90,11 @@ export async function generateKiroSpec(params: {
   // Design and tasks can run in parallel once requirements are ready
   const [designResponse, tasksResponse] = await Promise.all([
     ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: designPrompt,
     }),
     ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: tasksPrompt,
     }),
   ]);

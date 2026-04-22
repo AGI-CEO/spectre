@@ -48,7 +48,7 @@ Context: The product intent is: "${intent}"`;
     // 4. Call Gemini with Google Search grounding
     const ai = getGeminiClient();
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],

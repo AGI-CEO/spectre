@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     // 3. Call Gemini
     const ai = getGeminiClient();
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt,
     });
 
