@@ -10,6 +10,6 @@ export const sessions = pgTable("sessions", {
   kiroRequirements: text("kiro_requirements"),
   kiroDesign: text("kiro_design"),
   kiroTasks: text("kiro_tasks"),
-  embedding: vector("embedding", { dimensions: 1536 }),
+  embedding: vector("embedding", { dimensions: 768 }), // text-embedding-004 output size
   createdAt: timestamp("created_at").defaultNow(),
 });
