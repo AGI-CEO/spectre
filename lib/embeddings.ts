@@ -12,6 +12,9 @@ export async function embed(text: string): Promise<number[]> {
     model: "text-embedding-004",
     contents: text,
   });
+  if (!response.embeddings || !response.embeddings[0]?.values) {
+    throw new Error("Failed to generate embedding");
+  }
   return response.embeddings[0].values;
 }
 

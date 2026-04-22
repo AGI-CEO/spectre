@@ -1,9 +1,9 @@
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { embed } from "@/lib/embeddings";
-import type { ExtractedContext, InterviewMessage } from "@/lib/types";
+import type { ExtractedContext, InterviewMessage, BrainstormMessage, ResearchReport } from "@/lib/types";
 
-interface SaveSessionBody {
+interface SaveSessionBodyV1 {
   userId: string;
   braindumpTranscript: string;
   extractedContext: ExtractedContext;
@@ -14,16 +14,22 @@ interface SaveSessionBody {
   kiroTasks: string;
 }
 
-const REQUIRED_FIELDS: (keyof SaveSessionBody)[] = [
-  "userId",
-  "braindumpTranscript",
-  "extractedContext",
-  "interviewTranscript",
-  "prdMarkdown",
-  "kiroRequirements",
-  "kiroDesign",
-  "kiroTasks",
-];
+interface SaveSessionBodyV2 {
+  userId: string;
+  braindumpTranscript: string;
+  extractedContext: ExtractedContext;
+  brainstormTranscript: BrainstormMessage[];
+  researchReport: ResearchReport;
+  contextSteeringFile: string;
+  audienceSteeringFile: string;
+  seedRequirementsFile?: string;
+}
+
+type SaveSessionBody = SaveSessionBodyV1 | SaveSessionBodyV2;
+
+function isV2Session(body: SaveSessionBody): body is SaveSessionBodyV2 {
+  return "brainstormTranscript" in body && "researchReport" in body;
+}
 
 export async function POST(req: Request) {
   // 1. Parse request body
@@ -34,53 +40,95 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  // 2. Validate all required fields are present
-  const missingFields = REQUIRED_FIELDS.filter(
-    (field) => body[field] === undefined || body[field] === null
-  );
-  if (missingFields.length > 0) {
+  // 2. Validate required fields based on version
+  if (!body.userId || !body.braindumpTranscript || !body.extractedContext) {
     return Response.json(
-      { error: `Missing required fields: ${missingFields.join(", ")}` },
+      { error: "Missing required fields: userId, braindumpTranscript, extractedContext" },
       { status: 400 }
     );
   }
 
-  const {
-    userId,
-    braindumpTranscript,
-    extractedContext,
-    interviewTranscript,
-    prdMarkdown,
-    kiroRequirements,
-    kiroDesign,
-    kiroTasks,
-  } = body;
-
-  // 3. Extract intent and domain from extractedContext
+  const { userId, braindumpTranscript, extractedContext } = body;
   const { intent, domain } = extractedContext;
 
   try {
-    // 4. Generate 768-dim embedding
-    const embedding = await embed(`${intent} ${domain} ${prdMarkdown}`);
+    if (isV2Session(body)) {
+      // V2 session
+      const {
+        brainstormTranscript,
+        researchReport,
+        contextSteeringFile,
+        audienceSteeringFile,
+        seedRequirementsFile,
+      } = body;
 
-    // 5. Insert session row into DB
-    const result = await db
-      .insert(sessions)
-      .values({
-        userId,
-        braindumpTranscript,
-        extractedContext,
+      // Validate v2 required fields
+      if (!brainstormTranscript || !researchReport || !contextSteeringFile || !audienceSteeringFile) {
+        return Response.json(
+          { error: "Missing required v2 fields" },
+          { status: 400 }
+        );
+      }
+
+      // Generate embedding from intent + domain + contextSteeringFile
+      const embedding = await embed(`${intent} ${domain} ${contextSteeringFile}`);
+
+      // Insert v2 session
+      const result = await db
+        .insert(sessions)
+        .values({
+          userId,
+          braindumpTranscript,
+          extractedContext,
+          brainstormTranscript,
+          researchReport,
+          contextSteeringFile,
+          audienceSteeringFile,
+          seedRequirementsFile: seedRequirementsFile || null,
+          embedding,
+        })
+        .returning({ id: sessions.id });
+
+      return Response.json({ sessionId: result[0].id });
+    } else {
+      // V1 session (backward compatibility)
+      const {
         interviewTranscript,
         prdMarkdown,
         kiroRequirements,
         kiroDesign,
         kiroTasks,
-        embedding,
-      })
-      .returning({ id: sessions.id });
+      } = body;
 
-    // 6. Return sessionId on success
-    return Response.json({ sessionId: result[0].id });
+      // Validate v1 required fields
+      if (!interviewTranscript || !prdMarkdown || !kiroRequirements || !kiroDesign || !kiroTasks) {
+        return Response.json(
+          { error: "Missing required v1 fields" },
+          { status: 400 }
+        );
+      }
+
+      // Generate embedding from intent + domain + prdMarkdown
+      const embedding = await embed(`${intent} ${domain} ${prdMarkdown}`);
+
+      // Insert v1 session
+      const result = await db
+        .insert(sessions)
+        .values({
+          userId,
+          braindumpTranscript,
+          extractedContext,
+          interviewTranscript,
+          prdMarkdown,
+          kiroRequirements,
+          kiroDesign,
+          kiroTasks,
+          embedding,
+        })
+        .returning({ id: sessions.id });
+
+      return Response.json({ sessionId: result[0].id });
+    }
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Failed to save session";

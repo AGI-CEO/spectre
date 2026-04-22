@@ -1,0 +1,129 @@
+{
+  "id": "60434ad2-c49b-4165-9f26-f25510fc9ccf",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.sessions": {
+      "name": "sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "braindump_transcript": {
+          "name": "braindump_transcript",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "extracted_context": {
+          "name": "extracted_context",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interview_transcript": {
+          "name": "interview_transcript",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prd_markdown": {
+          "name": "prd_markdown",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kiro_requirements": {
+          "name": "kiro_requirements",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kiro_design": {
+          "name": "kiro_design",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kiro_tasks": {
+          "name": "kiro_tasks",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "brainstorm_transcript": {
+          "name": "brainstorm_transcript",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "research_report": {
+          "name": "research_report",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "context_steering_file": {
+          "name": "context_steering_file",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "audience_steering_file": {
+          "name": "audience_steering_file",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seed_requirements_file": {
+          "name": "seed_requirements_file",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "vector(768)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

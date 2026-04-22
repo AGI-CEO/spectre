@@ -67,17 +67,16 @@ export default function BraindumpPage() {
 
       // 18.5 — persist session to localStorage
       localStorage.setItem(
-        "specdraft_session",
+        "specdraft_v2_session",
         JSON.stringify({
           transcript,
           extractedContext,
-          interviewMessages: [],
           userId,
         })
       );
 
-      // 18.6 — navigate to /interview
-      router.push("/interview");
+      // 18.6 — navigate to /brainstorm
+      router.push("/brainstorm");
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -101,14 +100,13 @@ export default function BraindumpPage() {
 
         {/* Headline */}
         <h1 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Turn your idea into a spec{" "}
-          <span className="text-indigo-400">in minutes</span>
+          Voice-First AI Brainstorm{" "}
+          <span className="text-indigo-400">for Kiro</span>
         </h1>
 
         {/* Subheadline */}
         <p className="max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-          Brain-dump your product idea by voice, get interviewed by an AI agent,
-          and download a complete PRD&nbsp;+&nbsp;Kiro spec bundle.
+          Brain-dump your product idea → Brainstorm with AI → Get Kiro steering files with validated context, research, and architecture recommendations.
         </p>
 
         {/* CTA */}

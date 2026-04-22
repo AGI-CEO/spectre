@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SpecDraft — Voice-First AI Product Copilot",
+  title: "SpecDraft v2 — Voice-First AI Brainstorm for Kiro",
   description:
-    "Turn your raw product ideas into structured PRDs and Kiro spec bundles using voice-first AI. Brain-dump your idea, get interviewed by an AI agent, and download a complete spec in minutes.",
+    "Voice-first AI brainstorm copilot built for Kiro users. Brain-dump your idea, brainstorm with AI following startup best practices, and get Kiro steering files with validated context, competitive research, and architecture recommendations.",
 };
 
 export default function RootLayout({
