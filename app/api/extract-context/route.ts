@@ -21,10 +21,7 @@ const SYSTEM_PROMPT = `You are a product analyst. Given this raw brain-dump tran
   "constraints": ["platform, tech stack, time, or budget constraints mentioned"],
   "gaps": ["list of critical product questions NOT answered in the transcript"],
   "confidence": "low | medium | high"
-}
-
-Transcript:
-{{transcript}}`;
+}`;
 
 export async function POST(req: Request) {
   // 1. Parse request body and validate transcript
@@ -43,15 +40,16 @@ export async function POST(req: Request) {
     );
   }
 
-  // 2. Build prompt by substituting the transcript
-  const prompt = SYSTEM_PROMPT.replace("{{transcript}}", transcript);
-
   try {
-    // 3. Call Gemini
+    // 2. Call Gemini with system instruction + user transcript
     const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: "gemini-3.1-flash-lite-preview",
-      contents: prompt,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+      },
+      contents: `Transcript:\n${transcript}`,
     });
 
     const rawText = response.text;

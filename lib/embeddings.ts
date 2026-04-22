@@ -3,14 +3,17 @@ import { db } from "@/db";
 import { sql } from "drizzle-orm";
 
 /**
- * Generate an embedding vector for the given text using Gemini text-embedding-004.
- * Returns a 768-dimensional float array.
+ * Generate an embedding vector for the given text using Gemini embedding.
+ * Returns a 768-dimensional float array (MRL truncated from 3072).
  */
 export async function embed(text: string): Promise<number[]> {
   const ai = getGeminiClient();
   const response = await ai.models.embedContent({
-    model: "text-embedding-004",
+    model: "gemini-embedding-001",
     contents: text,
+    config: {
+      outputDimensionality: 768,
+    },
   });
   if (!response.embeddings || !response.embeddings[0]?.values) {
     throw new Error("Failed to generate embedding");

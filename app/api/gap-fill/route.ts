@@ -36,21 +36,20 @@ export async function POST(request: Request) {
   }
 
   // 3. Build prompt
-  const prompt = `You are a product research assistant. A product manager is building a product in the "${domain}" space and needs help answering this question: "${gap}"
-
-Search for: "${domain} ${gap} best practices"
-
+  const systemPrompt = `You are a product research assistant. A product manager is building a product in the "${domain}" space.
 Based on your research, provide a single confident, actionable suggested answer (2-4 sentences). Focus on what similar products in this space typically do. Be specific and practical.
-
 Context: The product intent is: "${intent}"`;
+
+  const userQuery = `Search for: "${domain} ${gap} best practices"\n\nQuestion to answer: "${gap}"`;
 
   try {
     // 4. Call Gemini with Google Search grounding
     const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: "gemini-3.1-flash-lite-preview",
-      contents: prompt,
+      contents: userQuery,
       config: {
+        systemInstruction: systemPrompt,
         tools: [{ googleSearch: {} }],
       },
     });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import BrainstormAgent from "@/components/BrainstormAgent";
 import ResearchProgress from "@/components/ResearchProgress";
 import type { BrainstormMessage, ExtractedContext, ResearchReport } from "@/lib/types";
@@ -9,11 +9,13 @@ import { deriveFeatureName } from "@/lib/steering-generator";
 
 export default function BrainstormPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [transcript, setTranscript] = useState("");
   const [extractedContext, setExtractedContext] = useState<ExtractedContext | null>(null);
   const [userId, setUserId] = useState("");
   const [isResearching, setIsResearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const skipTriggered = useRef(false);
 
   // Load session from localStorage
   useEffect(() => {
@@ -126,6 +128,31 @@ export default function BrainstormPage() {
       setIsResearching(false);
     }
   }
+
+  // DEV: Skip interview when ?skip=true — uses cached brainstorm messages
+  useEffect(() => {
+    if (
+      searchParams.get("skip") !== "true" ||
+      !extractedContext ||
+      skipTriggered.current
+    )
+      return;
+
+    const skipData = localStorage.getItem("specdraft_v2_skip");
+    if (!skipData) {
+      console.warn("[DEV SKIP] No skip data in localStorage. Run: node scripts/dev-skip-brainstorm.mjs");
+      return;
+    }
+
+    skipTriggered.current = true;
+    try {
+      const { brainstormMessages } = JSON.parse(skipData);
+      console.log("[DEV SKIP] Auto-triggering research with", brainstormMessages.length, "cached messages");
+      handleBrainstormComplete(brainstormMessages);
+    } catch (err) {
+      console.error("[DEV SKIP] Failed to parse skip data:", err);
+    }
+  }, [searchParams, extractedContext]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!extractedContext) {
     return (
