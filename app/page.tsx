@@ -204,19 +204,20 @@ export default function BraindumpPage() {
               boxShadow: "0 0 8px rgba(139, 92, 246, 0.6)",
             }}
           />
-          Your AI Product Copilot
+          For founders tired of &ldquo;someday&rdquo;
         </span>
 
         {/* Headline */}
         <h1 className="hero__title fade-in-up fade-in-up-delay-2">
-          Idea guys{" "}
-          <span className="hero__title-accent">ship real products</span>
+          You don&apos;t have an execution problem.{" "}
+          <span className="hero__title-accent">You have a starting problem.</span>
         </h1>
 
         {/* Subheadline */}
         <p className="hero__subtitle fade-in-up fade-in-up-delay-3">
-          Spectre takes you from raw idea to buildable spec faster than any IDE
-          or AI chatbot. Just talk — your product copilot handles the rest.
+          That notes app full of &ldquo;billion-dollar ideas&rdquo;? Pick one.
+          Talk about it for 2 minutes. Spectre turns your raw ramble into a
+          production-ready spec you can paste into Kiro and let it do all the work.
         </p>
 
         {/* CTA */}
@@ -236,7 +237,7 @@ export default function BraindumpPage() {
             <path d="M8.25 4.5a3.75 3.75 0 1 1 7.5 0v8.25a3.75 3.75 0 1 1-7.5 0V4.5Z" />
             <path d="M6 10.5a.75.75 0 0 1 .75.75v1.5a5.25 5.25 0 1 0 10.5 0v-1.5a.75.75 0 0 1 1.5 0v1.5a6.751 6.751 0 0 1-6 6.709v2.291h3a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1 0-1.5h3v-2.291a6.751 6.751 0 0 1-6-6.709v-1.5A.75.75 0 0 1 6 10.5Z" />
           </svg>
-          Start Brain-Dump
+          Pick an Idea. Go.
         </button>
       </section>
 
@@ -244,23 +245,23 @@ export default function BraindumpPage() {
       <div className="process-steps">
         <div className="process-card">
           <span className="process-card__number">1</span>
-          <h3 className="process-card__title">Dump your idea</h3>
+          <h3 className="process-card__title">Stop organizing. Start talking.</h3>
           <p className="process-card__desc">
-            No docs, no templates. Just hit record and talk about what you want to build.
+            No templates. No 47-field forms. Hit record and ramble about your idea like you&apos;re telling a friend at a bar.
           </p>
         </div>
         <div className="process-card">
           <span className="process-card__number">2</span>
-          <h3 className="process-card__title">Spectre pressure-tests it</h3>
+          <h3 className="process-card__title">Get the hard questions you&apos;ve been dodging</h3>
           <p className="process-card__desc">
-            Your copilot asks the hard questions, fills knowledge gaps with real research, and sharpens the vision.
+            Spectre plays devil&apos;s advocate — poking holes, filling gaps with real market research, and forcing clarity on the parts you&apos;ve been hand-waving.
           </p>
         </div>
         <div className="process-card">
           <span className="process-card__number">3</span>
-          <h3 className="process-card__title">Ship it</h3>
+          <h3 className="process-card__title">Walk away with something buildable</h3>
           <p className="process-card__desc">
-            Get production-ready spec files you can drop straight into Kiro and start building — today.
+            Not a pitch deck. Not a Notion doc. A real product spec you paste into Kiro and let it build the whole thing for you.
           </p>
         </div>
       </div>
@@ -345,7 +346,7 @@ export default function BraindumpPage() {
                         marginBottom: "0.5rem",
                       }}
                     >
-                      How do you want to brain-dump?
+                      Alright, let&apos;s get this one out of your head.
                     </h2>
                     <p
                       style={{
@@ -353,7 +354,7 @@ export default function BraindumpPage() {
                         color: "var(--text-secondary)",
                       }}
                     >
-                      Choose your preferred way to capture your idea
+                      Pick how you want to capture it — messy is fine, that&apos;s the point
                     </p>
                   </div>
 
@@ -382,10 +383,10 @@ export default function BraindumpPage() {
                         </svg>
                       </div>
                       <span className="method-card__title">
-                        Record Your Voice
+                        Just Talk
                       </span>
                       <span className="method-card__desc">
-                        Speak your idea naturally — just like explaining it to a friend
+                        Hit record and ramble — no structure needed, Spectre will make sense of it
                       </span>
                     </button>
 
@@ -413,10 +414,10 @@ export default function BraindumpPage() {
                         </svg>
                       </div>
                       <span className="method-card__title">
-                        Upload Audio File
+                        Upload a Voice Memo
                       </span>
                       <span className="method-card__desc">
-                        Already have a voice memo? Upload it and we&apos;ll transcribe it
+                        Got a 3 AM voice note already? Perfect. Drop it here.
                       </span>
                     </button>
                   </div>
@@ -481,8 +482,8 @@ export default function BraindumpPage() {
                       }}
                     >
                       {intakeMethod === "voice"
-                        ? "Record your brain-dump"
-                        : "Upload your audio"}
+                        ? "Let it rip"
+                        : "Drop your voice memo"}
                     </h2>
                     <p
                       style={{
@@ -491,8 +492,8 @@ export default function BraindumpPage() {
                       }}
                     >
                       {intakeMethod === "voice"
-                        ? "Hit record and speak freely — up to 10 minutes"
-                        : "Drag & drop or browse for your audio file"}
+                        ? "Talk for up to 10 minutes — the messier, the better"
+                        : "Drag & drop that 3 AM voice note right here"}
                     </p>
                   </div>
 
@@ -595,7 +596,7 @@ export default function BraindumpPage() {
                           marginBottom: "0.5rem",
                         }}
                       >
-                        Extracting your idea&apos;s DNA&hellip;
+                        Turning your ramble into a real plan&hellip;
                       </p>
                       <p
                         style={{
@@ -603,8 +604,8 @@ export default function BraindumpPage() {
                           color: "var(--text-secondary)",
                         }}
                       >
-                        Analyzing intent, domain, constraints, and knowledge
-                        gaps
+                        Extracting the product vision, spotting gaps, and
+                        prepping your brainstorm session
                       </p>
                     </div>
 

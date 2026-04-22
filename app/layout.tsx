@@ -15,9 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Spectre — The Product Copilot for Idea Guys Who Ship",
+  title: "Spectre — Stop Collecting Ideas. Start Shipping Them.",
   description:
-    "Go from raw idea to production-ready specs faster than any IDE or AI chatbot. Spectre is your voice-first product copilot — just talk, and ship.",
+    "You have 50 ideas and zero shipped products. Pick one, talk about it for 2 minutes, and Spectre turns your ramble into a production-ready spec you can paste into Kiro and ship today.",
 };
 
 export default function RootLayout({
