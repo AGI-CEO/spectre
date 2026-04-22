@@ -1,8 +1,13 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 
 export async function POST(req: Request) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    return Response.json({ error: "Missing ELEVENLABS_API_KEY" }, { status: 500 });
+  }
+
   try {
-    const client = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY || "" });
+    const client = new ElevenLabsClient({ apiKey });
 
     const formData = await req.formData();
     const audioFile = formData.get("audio") as Blob;

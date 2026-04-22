@@ -10,16 +10,21 @@
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.44.0",
+    "@elevenlabs/react": "^1.1.1",
     "@google/genai": "^1.50.1",
     "@neondatabase/serverless": "^1.1.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "jszip": "^3.10.1",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-dropzone": "^15.0.0",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
