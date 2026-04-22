@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import BrainstormAgent from "@/components/BrainstormAgent";
 import ResearchProgress from "@/components/ResearchProgress";
@@ -8,6 +8,20 @@ import type { BrainstormMessage, ExtractedContext, ResearchReport } from "@/lib/
 import { deriveFeatureName } from "@/lib/steering-generator";
 
 export default function BrainstormPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+        </div>
+      }
+    >
+      <BrainstormContent />
+    </Suspense>
+  );
+}
+
+function BrainstormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [transcript, setTranscript] = useState("");
