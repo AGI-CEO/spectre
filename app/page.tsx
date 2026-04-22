@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import BraindumpRecorder from "@/components/BraindumpRecorder";
 import FileUploadZone from "@/components/FileUploadZone";
@@ -17,171 +17,612 @@ function getOrCreateUserId(): string {
   return id;
 }
 
+// ── Particle config ─────────────────────────────────────────────────────────
+
+const PARTICLES = [
+  { id: 0, size: 6, left: 8, delay: 0, duration: 18, variant: "violet" },
+  { id: 1, size: 5, left: 22, delay: 3.2, duration: 24, variant: "cyan" },
+  { id: 2, size: 9, left: 38, delay: 7.1, duration: 15, variant: "indigo" },
+  { id: 3, size: 7, left: 52, delay: 1.5, duration: 22, variant: "violet" },
+  { id: 4, size: 4, left: 65, delay: 9.8, duration: 27, variant: "cyan" },
+  { id: 5, size: 10, left: 78, delay: 4.4, duration: 19, variant: "indigo" },
+  { id: 6, size: 5, left: 15, delay: 6.7, duration: 21, variant: "violet" },
+  { id: 7, size: 8, left: 43, delay: 11.2, duration: 16, variant: "cyan" },
+  { id: 8, size: 6, left: 88, delay: 2.9, duration: 25, variant: "indigo" },
+  { id: 9, size: 11, left: 33, delay: 8.5, duration: 14, variant: "violet" },
+  { id: 10, size: 7, left: 71, delay: 5.6, duration: 23, variant: "cyan" },
+  { id: 11, size: 5, left: 56, delay: 10.3, duration: 17, variant: "indigo" },
+];
+
+// ── Types ───────────────────────────────────────────────────────────────────
+
+type FunnelStep = "closed" | "choose" | "capture" | "extracting";
+type IntakeMethod = "voice" | "upload" | null;
+
 // ── component ─────────────────────────────────────────────────────────────────
 
 export default function BraindumpPage() {
   const router = useRouter();
-  const intakeSectionRef = useRef<HTMLDivElement>(null);
 
+  const [funnelStep, setFunnelStep] = useState<FunnelStep>("closed");
+  const [intakeMethod, setIntakeMethod] = useState<IntakeMethod>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
 
-  // Scroll to the intake section when the CTA is clicked
-  function scrollToIntake() {
-    intakeSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Open the funnel
+  function openFunnel() {
+    setFunnelStep("choose");
+    setIntakeMethod(null);
+    setExtractError(null);
+  }
+
+  // Close the funnel
+  function closeFunnel() {
+    setFunnelStep("closed");
+    setIntakeMethod(null);
+    setExtractError(null);
+  }
+
+  // Select intake method → advance to capture
+  function selectMethod(method: "voice" | "upload") {
+    setIntakeMethod(method);
+    setFunnelStep("capture");
+  }
+
+  // Go back from capture → choose
+  function goBackToChoose() {
+    setIntakeMethod(null);
+    setFunnelStep("choose");
+    setExtractError(null);
   }
 
   // Called by both BraindumpRecorder and FileUploadZone when the user confirms
-  async function handleTranscriptConfirmed(transcript: string) {
-    setIsExtracting(true);
-    setExtractError(null);
+  const handleTranscriptConfirmed = useCallback(
+    async (transcript: string) => {
+      setIsExtracting(true);
+      setExtractError(null);
+      setFunnelStep("extracting");
 
-    try {
-      // 18.4a — POST to /api/extract-context
-      const extractRes = await fetch("/api/extract-context", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript }),
-      });
+      try {
+        const extractRes = await fetch("/api/extract-context", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcript }),
+        });
 
-      if (!extractRes.ok) {
-        const data = await extractRes.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error ??
-            `Context extraction failed (HTTP ${extractRes.status})`
+        if (!extractRes.ok) {
+          const data = await extractRes.json().catch(() => ({}));
+          throw new Error(
+            (data as { error?: string }).error ??
+              `Context extraction failed (HTTP ${extractRes.status})`
+          );
+        }
+
+        const { context: extractedContext } = (await extractRes.json()) as {
+          context: ExtractedContext;
+        };
+
+        const userId = getOrCreateUserId();
+        const pastSessionsUrl = `/api/past-sessions?query=${encodeURIComponent(
+          extractedContext.intent
+        )}&userId=${encodeURIComponent(userId)}`;
+        await fetch(pastSessionsUrl).catch(() => {});
+
+        localStorage.setItem(
+          "specdraft_v2_session",
+          JSON.stringify({
+            transcript,
+            extractedContext,
+            userId,
+          })
         );
+
+        router.push("/brainstorm");
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Something went wrong. Please try again.";
+        setExtractError(message);
+        setFunnelStep("capture");
+        setIsExtracting(false);
       }
+    },
+    [router]
+  );
 
-      const { context: extractedContext } = (await extractRes.json()) as {
-        context: ExtractedContext;
-      };
-
-      // 18.4b — GET /api/past-sessions (fire-and-forget; result not needed for navigation)
-      const userId = getOrCreateUserId();
-      const pastSessionsUrl = `/api/past-sessions?query=${encodeURIComponent(
-        extractedContext.intent
-      )}&userId=${encodeURIComponent(userId)}`;
-      await fetch(pastSessionsUrl).catch(() => {
-        // Non-fatal — past sessions are advisory only
-      });
-
-      // 18.5 — persist session to localStorage
-      localStorage.setItem(
-        "specdraft_v2_session",
-        JSON.stringify({
-          transcript,
-          extractedContext,
-          userId,
-        })
-      );
-
-      // 18.6 — navigate to /brainstorm
-      router.push("/brainstorm");
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again.";
-      setExtractError(message);
-      setIsExtracting(false);
+  // Close on Escape key
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && funnelStep !== "closed" && funnelStep !== "extracting") {
+        closeFunnel();
+      }
     }
-  }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [funnelStep]);
 
   // ── render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans">
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="flex flex-col items-center justify-center gap-8 px-6 py-28 text-center">
+    <div className="min-h-screen text-zinc-100 font-sans relative">
+      {/* ── Animated Background ────────────────────────────────────────── */}
+      <div className="spectre-bg">
+        {PARTICLES.map((p) => (
+          <div
+            key={p.id}
+            className={`particle particle--${p.variant}`}
+            style={{
+              width: p.size,
+              height: p.size,
+              left: `${p.left}%`,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ── Hero Section ──────────────────────────────────────────────── */}
+      <section className="hero">
+        {/* Spectre logo mark */}
+        <div className="spectre-glow fade-in-up">
+          <svg
+            width="56"
+            height="56"
+            viewBox="0 0 512 512"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="logo-g" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="50%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#06b6d4" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M256 48c-97 0-176 79-176 176v192c0 8 10 13 16 7l40-40c6-6 16-6 22 0l40 40c6 6 16 6 22 0l36-36c6-6 16-6 22 0l36 36c6 6 16 6 22 0l40-40c6-6 16-6 22 0l40 40c6 6 16 1 16-7V224c0-97-79-176-176-176z"
+              fill="url(#logo-g)"
+            />
+            <ellipse cx="200" cy="240" rx="28" ry="36" fill="#0f0f23" opacity="0.9" />
+            <ellipse cx="312" cy="240" rx="28" ry="36" fill="#0f0f23" opacity="0.9" />
+            <ellipse cx="210" cy="228" rx="10" ry="12" fill="white" opacity="0.7" />
+            <ellipse cx="322" cy="228" rx="10" ry="12" fill="white" opacity="0.7" />
+          </svg>
+        </div>
+
         {/* Badge */}
-        <span className="inline-flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-4 py-1 text-xs font-medium text-indigo-300 tracking-wide uppercase">
+        <span className="badge fade-in-up fade-in-up-delay-1">
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#8b5cf6",
+              boxShadow: "0 0 8px rgba(139, 92, 246, 0.6)",
+            }}
+          />
           Voice-First AI Product Copilot
         </span>
 
         {/* Headline */}
-        <h1 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Voice-First AI Brainstorm{" "}
-          <span className="text-indigo-400">for Kiro</span>
+        <h1 className="hero__title fade-in-up fade-in-up-delay-2">
+          Turn your voice into{" "}
+          <span className="hero__title-accent">production-ready specs</span>
         </h1>
 
         {/* Subheadline */}
-        <p className="max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-          Brain-dump your product idea → Brainstorm with AI → Get Kiro steering files with validated context, research, and architecture recommendations.
+        <p className="hero__subtitle fade-in-up fade-in-up-delay-3">
+          Brain-dump your product idea by voice. Spectre brainstorms with AI,
+          researches gaps, and delivers Kiro-ready steering files — in minutes.
         </p>
 
         {/* CTA */}
         <button
+          id="cta-start"
           type="button"
-          onClick={scrollToIntake}
-          className="rounded-xl bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/40 transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+          onClick={openFunnel}
+          className="btn-cta fade-in-up fade-in-up-delay-4"
         >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M8.25 4.5a3.75 3.75 0 1 1 7.5 0v8.25a3.75 3.75 0 1 1-7.5 0V4.5Z" />
+            <path d="M6 10.5a.75.75 0 0 1 .75.75v1.5a5.25 5.25 0 1 0 10.5 0v-1.5a.75.75 0 0 1 1.5 0v1.5a6.751 6.751 0 0 1-6 6.709v2.291h3a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1 0-1.5h3v-2.291a6.751 6.751 0 0 1-6-6.709v-1.5A.75.75 0 0 1 6 10.5Z" />
+          </svg>
           Start Brain-Dump
         </button>
       </section>
 
-      {/* ── Intake section ────────────────────────────────────────────────── */}
-      <section
-        ref={intakeSectionRef}
-        id="intake"
-        className="mx-auto w-full max-w-5xl px-6 pb-24"
-      >
-        <h2 className="mb-8 text-center text-xl font-semibold text-zinc-200">
-          Choose how you want to brain-dump
-        </h2>
+      {/* ── How It Works ──────────────────────────────────────────────── */}
+      <div className="process-steps">
+        <div className="process-card">
+          <span className="process-card__number">1</span>
+          <h3 className="process-card__title">Brain-dump</h3>
+          <p className="process-card__desc">
+            Record or upload your raw idea — no prep needed. Just speak naturally.
+          </p>
+        </div>
+        <div className="process-card">
+          <span className="process-card__number">2</span>
+          <h3 className="process-card__title">AI Brainstorm</h3>
+          <p className="process-card__desc">
+            Spectre fills gaps, runs research, and stress-tests your idea with smart follow-ups.
+          </p>
+        </div>
+        <div className="process-card">
+          <span className="process-card__number">3</span>
+          <h3 className="process-card__title">Get Specs</h3>
+          <p className="process-card__desc">
+            Download Kiro steering files with context, audience mapping, and architecture recommendations.
+          </p>
+        </div>
+      </div>
 
-        {/* Loading overlay */}
-        {isExtracting && (
-          <div className="mb-6 flex items-center justify-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-950/40 px-6 py-4">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
-            <p className="text-sm font-medium text-indigo-300">
-              Extracting context&hellip;
-            </p>
-          </div>
-        )}
+      {/* ── Funnel Modal ─────────────────────────────────────────────── */}
+      {funnelStep !== "closed" && (
+        <div
+          className="funnel-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && funnelStep !== "extracting") {
+              closeFunnel();
+            }
+          }}
+        >
+          <div className="funnel-container">
+            {/* Step indicator */}
+            <div className="step-indicator">
+              <div
+                className={`step-dot ${
+                  funnelStep === "choose"
+                    ? "step-dot--active"
+                    : "step-dot--completed"
+                }`}
+              />
+              <div
+                className={`step-line ${
+                  funnelStep !== "choose" ? "step-line--active" : ""
+                }`}
+              />
+              <div
+                className={`step-dot ${
+                  funnelStep === "capture"
+                    ? "step-dot--active"
+                    : funnelStep === "extracting"
+                    ? "step-dot--completed"
+                    : ""
+                }`}
+              />
+              <div
+                className={`step-line ${
+                  funnelStep === "extracting" ? "step-line--active" : ""
+                }`}
+              />
+              <div
+                className={`step-dot ${
+                  funnelStep === "extracting" ? "step-dot--active" : ""
+                }`}
+              />
+            </div>
 
-        {/* Error message */}
-        {extractError && (
-          <div
-            role="alert"
-            className="mb-6 rounded-xl border border-red-500/30 bg-red-950/30 px-6 py-4 text-sm text-red-300"
-          >
-            {extractError}
-          </div>
-        )}
+            {/* ── Step 1: Choose Method ─────────────────────────────────── */}
+            {funnelStep === "choose" && (
+              <div className="step-enter" key="choose">
+                <div className="glass rounded-2xl p-8 relative">
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeFunnel}
+                    aria-label="Close"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
 
-        {/*
-         * Side-by-side on md+, stacked (tabbed feel) on mobile.
-         * Each panel is visually separated with a divider label.
-         */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-          {/* Voice recorder */}
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-              🎙 Record your voice
-            </p>
-            <BraindumpRecorder
-              onTranscriptConfirmed={handleTranscriptConfirmed}
-            />
-          </div>
+                  <div className="text-center mb-8">
+                    <h2
+                      style={{
+                        fontSize: "1.5rem",
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      How do you want to brain-dump?
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: "0.9375rem",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      Choose your preferred way to capture your idea
+                    </p>
+                  </div>
 
-          {/* Divider — visible only on mobile */}
-          <div className="flex items-center gap-4 md:hidden">
-            <div className="h-px flex-1 bg-zinc-800" />
-            <span className="text-xs text-zinc-500">or</span>
-            <div className="h-px flex-1 bg-zinc-800" />
-          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Voice Recording Card */}
+                    <button
+                      id="method-voice"
+                      type="button"
+                      className="method-card"
+                      onClick={() => selectMethod("voice")}
+                    >
+                      <div className="method-card__icon">
+                        <svg
+                          width="28"
+                          height="28"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#a78bfa"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                          <line x1="12" y1="19" x2="12" y2="22" />
+                        </svg>
+                      </div>
+                      <span className="method-card__title">
+                        Record Your Voice
+                      </span>
+                      <span className="method-card__desc">
+                        Speak your idea naturally — just like explaining it to a friend
+                      </span>
+                    </button>
 
-          {/* File upload */}
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-              📁 Upload an audio file
-            </p>
-            <FileUploadZone
-              onTranscriptConfirmed={handleTranscriptConfirmed}
-            />
+                    {/* Upload Card */}
+                    <button
+                      id="method-upload"
+                      type="button"
+                      className="method-card"
+                      onClick={() => selectMethod("upload")}
+                    >
+                      <div className="method-card__icon">
+                        <svg
+                          width="28"
+                          height="28"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#06b6d4"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                      </div>
+                      <span className="method-card__title">
+                        Upload Audio File
+                      </span>
+                      <span className="method-card__desc">
+                        Already have a voice memo? Upload it and we&apos;ll transcribe it
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Step 2: Capture ───────────────────────────────────────── */}
+            {funnelStep === "capture" && (
+              <div className="step-enter" key="capture">
+                <div className="glass rounded-2xl p-8 relative">
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeFunnel}
+                    aria-label="Close"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+
+                  <div className="mb-6">
+                    <button
+                      type="button"
+                      className="btn-back"
+                      onClick={goBackToChoose}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                      Back
+                    </button>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <h2
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {intakeMethod === "voice"
+                        ? "Record your brain-dump"
+                        : "Upload your audio"}
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: "0.8125rem",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      {intakeMethod === "voice"
+                        ? "Hit record and speak freely — up to 10 minutes"
+                        : "Drag & drop or browse for your audio file"}
+                    </p>
+                  </div>
+
+                  {/* Error message */}
+                  {extractError && (
+                    <div
+                      role="alert"
+                      className="mb-6 rounded-xl border border-red-500/30 bg-red-950/30 px-6 py-4 text-sm text-red-300"
+                    >
+                      {extractError}
+                    </div>
+                  )}
+
+                  {/* Intake component */}
+                  {intakeMethod === "voice" ? (
+                    <BraindumpRecorder
+                      onTranscriptConfirmed={handleTranscriptConfirmed}
+                    />
+                  ) : (
+                    <FileUploadZone
+                      onTranscriptConfirmed={handleTranscriptConfirmed}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Step 3: Extracting ───────────────────────────────────── */}
+            {funnelStep === "extracting" && (
+              <div className="step-enter" key="extracting">
+                <div className="glass rounded-2xl p-12 relative">
+                  <div className="flex flex-col items-center gap-6 text-center">
+                    {/* Pulsing logo */}
+                    <div className="extract-pulse">
+                      <svg
+                        width="64"
+                        height="64"
+                        viewBox="0 0 512 512"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="extract-g"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#a78bfa" />
+                            <stop offset="50%" stopColor="#6366f1" />
+                            <stop offset="100%" stopColor="#06b6d4" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M256 48c-97 0-176 79-176 176v192c0 8 10 13 16 7l40-40c6-6 16-6 22 0l40 40c6 6 16 6 22 0l36-36c6-6 16-6 22 0l36 36c6 6 16 6 22 0l40-40c6-6 16-6 22 0l40 40c6 6 16 1 16-7V224c0-97-79-176-176-176z"
+                          fill="url(#extract-g)"
+                        />
+                        <ellipse
+                          cx="200"
+                          cy="240"
+                          rx="28"
+                          ry="36"
+                          fill="#0f0f23"
+                          opacity="0.9"
+                        />
+                        <ellipse
+                          cx="312"
+                          cy="240"
+                          rx="28"
+                          ry="36"
+                          fill="#0f0f23"
+                          opacity="0.9"
+                        />
+                        <ellipse
+                          cx="210"
+                          cy="228"
+                          rx="10"
+                          ry="12"
+                          fill="white"
+                          opacity="0.7"
+                        />
+                        <ellipse
+                          cx="322"
+                          cy="228"
+                          rx="10"
+                          ry="12"
+                          fill="white"
+                          opacity="0.7"
+                        />
+                      </svg>
+                    </div>
+
+                    <div>
+                      <p
+                        style={{
+                          fontSize: "1.125rem",
+                          fontWeight: 600,
+                          color: "var(--text-primary)",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        Extracting your idea&apos;s DNA&hellip;
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "0.8125rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        Analyzing intent, domain, constraints, and knowledge
+                        gaps
+                      </p>
+                    </div>
+
+                    {/* Animated dots */}
+                    <div className="dna-helix">
+                      <div className="dna-dot" />
+                      <div className="dna-dot" />
+                      <div className="dna-dot" />
+                      <div className="dna-dot" />
+                      <div className="dna-dot" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

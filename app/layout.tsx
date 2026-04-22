@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-jetbrains-mono",
 });
 
 export const metadata: Metadata = {
-  title: "SpecDraft v2 — Voice-First AI Brainstorm for Kiro",
+  title: "Spectre — Voice-First AI Product Copilot",
   description:
-    "Voice-first AI brainstorm copilot built for Kiro users. Brain-dump your idea, brainstorm with AI following startup best practices, and get Kiro steering files with validated context, competitive research, and architecture recommendations.",
+    "Brain-dump your product idea by voice, brainstorm with AI, and get production-ready specs with validated context, research, and architecture recommendations.",
 };
 
 export default function RootLayout({
@@ -26,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
