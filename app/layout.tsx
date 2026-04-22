@@ -15,9 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Spectre — Voice-First AI Product Copilot",
+  title: "Spectre — The Product Copilot for Idea Guys Who Ship",
   description:
-    "Brain-dump your product idea by voice, brainstorm with AI, and get production-ready specs with validated context, research, and architecture recommendations.",
+    "Go from raw idea to production-ready specs faster than any IDE or AI chatbot. Spectre is your voice-first product copilot — just talk, and ship.",
 };
 
 export default function RootLayout({

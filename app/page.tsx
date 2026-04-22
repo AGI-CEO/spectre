@@ -204,19 +204,19 @@ export default function BraindumpPage() {
               boxShadow: "0 0 8px rgba(139, 92, 246, 0.6)",
             }}
           />
-          Voice-First AI Product Copilot
+          Your AI Product Copilot
         </span>
 
         {/* Headline */}
         <h1 className="hero__title fade-in-up fade-in-up-delay-2">
-          Turn your voice into{" "}
-          <span className="hero__title-accent">production-ready specs</span>
+          Idea guys{" "}
+          <span className="hero__title-accent">ship real products</span>
         </h1>
 
         {/* Subheadline */}
         <p className="hero__subtitle fade-in-up fade-in-up-delay-3">
-          Brain-dump your product idea by voice. Spectre brainstorms with AI,
-          researches gaps, and delivers Kiro-ready steering files — in minutes.
+          Spectre takes you from raw idea to buildable spec faster than any IDE
+          or AI chatbot. Just talk — your product copilot handles the rest.
         </p>
 
         {/* CTA */}
@@ -244,23 +244,23 @@ export default function BraindumpPage() {
       <div className="process-steps">
         <div className="process-card">
           <span className="process-card__number">1</span>
-          <h3 className="process-card__title">Brain-dump</h3>
+          <h3 className="process-card__title">Dump your idea</h3>
           <p className="process-card__desc">
-            Record or upload your raw idea — no prep needed. Just speak naturally.
+            No docs, no templates. Just hit record and talk about what you want to build.
           </p>
         </div>
         <div className="process-card">
           <span className="process-card__number">2</span>
-          <h3 className="process-card__title">AI Brainstorm</h3>
+          <h3 className="process-card__title">Spectre pressure-tests it</h3>
           <p className="process-card__desc">
-            Spectre fills gaps, runs research, and stress-tests your idea with smart follow-ups.
+            Your copilot asks the hard questions, fills knowledge gaps with real research, and sharpens the vision.
           </p>
         </div>
         <div className="process-card">
           <span className="process-card__number">3</span>
-          <h3 className="process-card__title">Get Specs</h3>
+          <h3 className="process-card__title">Ship it</h3>
           <p className="process-card__desc">
-            Download Kiro steering files with context, audience mapping, and architecture recommendations.
+            Get production-ready spec files you can drop straight into Kiro and start building — today.
           </p>
         </div>
       </div>
