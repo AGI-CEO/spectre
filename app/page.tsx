@@ -36,7 +36,7 @@ const PARTICLES = [
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-type FunnelStep = "closed" | "choose" | "capture" | "extracting";
+type FunnelStep = "closed" | "follow" | "choose" | "capture" | "extracting";
 type IntakeMethod = "voice" | "upload" | null;
 
 // ── component ─────────────────────────────────────────────────────────────────
@@ -48,12 +48,18 @@ export default function BraindumpPage() {
   const [intakeMethod, setIntakeMethod] = useState<IntakeMethod>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
+  const [hasClickedFollow, setHasClickedFollow] = useState(false);
 
   // Open the funnel
   function openFunnel() {
-    setFunnelStep("choose");
+    setFunnelStep("follow");
     setIntakeMethod(null);
     setExtractError(null);
+  }
+
+  // Advance from follow → choose
+  function advanceFromFollow() {
+    setFunnelStep("choose");
   }
 
   // Close the funnel
@@ -279,18 +285,35 @@ export default function BraindumpPage() {
           <div className="funnel-container">
             {/* Step indicator */}
             <div className="step-indicator">
+              {/* Dot 1: Follow */}
               <div
                 className={`step-dot ${
-                  funnelStep === "choose"
+                  funnelStep === "follow"
                     ? "step-dot--active"
                     : "step-dot--completed"
                 }`}
               />
               <div
                 className={`step-line ${
-                  funnelStep !== "choose" ? "step-line--active" : ""
+                  funnelStep !== "follow" ? "step-line--active" : ""
                 }`}
               />
+              {/* Dot 2: Choose */}
+              <div
+                className={`step-dot ${
+                  funnelStep === "choose"
+                    ? "step-dot--active"
+                    : funnelStep === "capture" || funnelStep === "extracting"
+                    ? "step-dot--completed"
+                    : ""
+                }`}
+              />
+              <div
+                className={`step-line ${
+                  funnelStep === "capture" || funnelStep === "extracting" ? "step-line--active" : ""
+                }`}
+              />
+              {/* Dot 3: Capture */}
               <div
                 className={`step-dot ${
                   funnelStep === "capture"
@@ -305,12 +328,112 @@ export default function BraindumpPage() {
                   funnelStep === "extracting" ? "step-line--active" : ""
                 }`}
               />
+              {/* Dot 4: Extracting */}
               <div
                 className={`step-dot ${
                   funnelStep === "extracting" ? "step-dot--active" : ""
                 }`}
               />
             </div>
+
+            {/* ── Step 0: Follow Gate ──────────────────────────────────── */}
+            {funnelStep === "follow" && (
+              <div className="step-enter" key="follow">
+                <div className="glass rounded-2xl p-8 relative">
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeFunnel}
+                    aria-label="Close"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+
+                  <div className="follow-gate">
+                    {/* X / Twitter icon */}
+                    <div className="follow-gate__icon">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                    </div>
+
+                    {/* Pain */}
+                    <h2 className="follow-gate__headline">
+                      Your ideas die in silence.
+                    </h2>
+
+                    {/* Agitate */}
+                    <p className="follow-gate__body">
+                      You&apos;ve got a notes app full of &ldquo;game-changing&rdquo; concepts
+                      that never see daylight. No feedback loop. No accountability.
+                      No one pushing you to actually ship.
+                    </p>
+
+                    {/* Solution */}
+                    <p className="follow-gate__solution">
+                      I&apos;m building tools that turn raw ideas into shipped products —
+                      and I share every lesson, hack, and breakdown in real time.
+                      Follow the journey.
+                    </p>
+
+                    {/* Follow button */}
+                    <a
+                      id="follow-x-btn"
+                      href="https://x.com/AGI_CEO"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="follow-gate__btn"
+                      onClick={() => setHasClickedFollow(true)}
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                      Follow @AGI_CEO
+                    </a>
+
+                    {/* Continue button — only visible after clicking follow */}
+                    {hasClickedFollow ? (
+                      <button
+                        id="follow-continue-btn"
+                        type="button"
+                        className="follow-gate__continue"
+                        onClick={advanceFromFollow}
+                      >
+                        Continue to Spectre →
+                      </button>
+                    ) : (
+                      <p className="follow-gate__hint">
+                        Follow to unlock Spectre ↑
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ── Step 1: Choose Method ─────────────────────────────────── */}
             {funnelStep === "choose" && (
