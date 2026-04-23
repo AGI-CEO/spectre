@@ -199,8 +199,75 @@ function BrainstormContent() {
             onBrainstormComplete={handleBrainstormComplete}
           />
         ) : (
-          <ResearchProgress isResearching={true} />
+          <div className="flex flex-col gap-6">
+            <ResearchProgress isResearching={true} />
+            <DemoEngagementCTA />
+          </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Demo Engagement CTA (shown during research wait) ────────────────────────
+
+function DemoEngagementCTA() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="rounded-xl border border-zinc-700 bg-zinc-900 p-6"
+      style={{ animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+    >
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex items-center gap-2 text-zinc-400">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span className="text-xs font-medium uppercase tracking-wider">
+            While you wait
+          </span>
+        </div>
+
+        <p className="text-sm text-zinc-300 max-w-md">
+          Spectre is a hackathon project — every like and repost helps us win.
+          If this tool saved you time, show some love on the demo post. 🙏
+        </p>
+
+        <a
+          href="https://x.com/AGI_CEO/status/2047062315372081603"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg bg-zinc-800 border border-zinc-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 hover:border-zinc-500"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          Like &amp; Repost the Demo
+        </a>
       </div>
     </div>
   );
